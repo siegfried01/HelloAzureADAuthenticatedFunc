@@ -85,7 +85,7 @@ namespace HelloAzureADAuthenticatedFunc
             {
                 sb.AppendLine("<br/> No authorization header found");
             }
-            return (ActionResult)new OkObjectResult($"Hello, time and date are {DateTime.Now.ToString()}. (Built at Mon Apr 24 20:57:36 2023) {sb.ToString()}");
+            return (ActionResult)new OkObjectResult($"Hello, time and date are {DateTime.Now.ToString()}. (Built at Thu Sep  7 19:24:06 2023) {sb.ToString()}");
         }
     }
 }
