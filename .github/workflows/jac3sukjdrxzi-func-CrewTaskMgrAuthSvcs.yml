@@ -51,8 +51,13 @@ jobs:
     runs-on: windows-latest
     needs: deploy
     steps:
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}    
     - name: get-accessToken
       run: |
+          Install-Module -Name Az -AllowClobber -Scope CurrentUser -Force
+          Import-Module Az
           $accountInfo = az account show
           $accountInfoObject = $accountInfo | ConvertFrom-Json
           $subscription  = $accountInfoObject.id
