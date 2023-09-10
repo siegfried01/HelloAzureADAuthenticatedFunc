@@ -58,6 +58,7 @@ jobs:
       run: |
           Install-Module -Name Az -AllowClobber -Scope CurrentUser -Force
           Import-Module Az
+          Connect-AzAccount
           $accountInfo = az account show
           $accountInfoObject = $accountInfo | ConvertFrom-Json
           $subscription  = $accountInfoObject.id
