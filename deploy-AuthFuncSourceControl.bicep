@@ -1,8 +1,10 @@
 /*
    Begin common prolog commands
    export name=AuthFuncSourceControl
+   export name=CrewTaskMgr
+   export uniqueName=jac3sukjdrxzi
    export rg=rg_${name}
-   export loc=westus2
+   export loc=westus
    End common prolog commands
 
    emacs F10
@@ -10,8 +12,6 @@
    echo WaitForBuildComplete
    WaitForBuildComplete
    echo "Previous build is complete. Begin deployment build."
-   echo az deployment group create --mode complete --template-file ./clear-resources.json --resource-group $rg
-   az deployment group create --mode complete --template-file ./clear-resources.json --resource-group $rg
    echo az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep --parameters  '@deploy.parameters.json' 
    az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep  --parameters  '@deploy.parameters.json' 
    echo end deploy
@@ -53,16 +53,25 @@
    fi
    End commands for one time initializations using Azure CLI with bash
 
+
+   Shutdown (delete) Function App only
+   emacs ESC 4 F10
+   Begin commands to shut down this deployment using Azure CLI with bash
+   echo CreateBuildEvent.exe
+   CreateBuildEvent.exe&
+   echo "begin shutdown"
+   echo az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
+   az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
+   BuildIsComplete.exe
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
+   echo "showdown is complete"
+   End commands to shut down this deployment using Azure CLI with bash
+
    https://learn.microsoft.com/en-us/azure/azure-functions/functions-infrastructure-as-code?tabs=bicep
 
  */
 param location string = resourceGroup().location
 param name string = uniqueString(resourceGroup().id)
-@description('The name of the web app that you wish to create.')
-param siteName string = '${name}-web'
-
-@description('The name of the App Service plan to use for hosting the web app.')
-param hostingPlanName string = '${name}-plan'
 
 @description('Rquire Azure AD authentication for Azure Func CrewTaskMgrAuthSvs')
 param requireAuthentication bool = true
@@ -74,16 +83,10 @@ param BackEndClientSecret string
 param applicationId string
 param funcCrewTaskMgrAuthSvcsName string = 'CrewTaskMgrAuthSvcs'
 
-@description('The pricing tier for the hosting plan.')
-@allowed([
-    'F1'
-    'D1'
-    'B1'
-    'B2'
-    'B3'
-    'S1'
-])
-param sku string = 'F1'
+@secure()
+param AuthTenantId string
+@secure()
+param AuthAudience string
 
 @description('The URL for the GitHub repository that contains the project to deploy.')
 param repoURL string = 'https://github.com/siegfried01/HelloAzureADAuthenticatedFunc.git'
@@ -91,6 +94,36 @@ param repoURL string = 'https://github.com/siegfried01/HelloAzureADAuthenticated
 
 @description('The branch of the GitHub repository to use.')
 param branch string = 'master'
+
+@description('cosmos database name')
+param dbName string = 'CrewTaskMgr'
+@description('cosmos container')
+param containerName string = 'CrewTaskMgrContainer'
+
+@description('Cosmos DB account name (must contain only lowercase letters, digits, and hyphens)')
+@minLength(3)
+@maxLength(44)
+param cosmosAccountName string = 'gpdocumentdb'
+
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2015-04-08' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: cosmosAccountName
+    //id: '/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourceGroups/rg_GeneralPurposeCosmos/providers/Microsoft.DocumentDB/databaseAccounts/gpdocumentdb'
+}
+
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: '${cosmosDbAccount.name}/${dbName}'
+}
+// Data Container
+resource containerData 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: '${cosmosDbDatabase.name}/${containerName}'
+}
+output appConfigCosmosAccountKeyString string = listKeys(cosmosDbAccount.id, cosmosDbAccount.apiVersion).primaryMasterKey
+output appConfigCosmosConnectionString string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].connectionString
+output appConfigCosmosConnectionDesc string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].description
+output appConfigCosmosEndPointString string = cosmosDbAccount.properties.documentEndpoint
 
 resource funcCrewTaskMgrAuthSvsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     name: '${name}-func-plan-CrewTaskMgrAuthSvcs'
@@ -304,6 +337,11 @@ resource funcCrewTaskMgrAuthSvcs 'Microsoft.Web/sites@2022-09-01' = {
             'ASPNETCORE_ENVIRONMENT': 'Development'
             'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET': '${BackEndClientSecret}'
             'AzureWebJobsStorage': blobStorageConnectionString
+            COSMOS_GP_ACCOUNTKEY: listKeys(cosmosDbAccount.id, cosmosDbAccount.apiVersion).primaryMasterKey
+            COSMOS_GP_ENDPOINT: cosmosDbAccount.properties.documentEndpoint
+            'Auth:TenantId': AuthTenantId
+            'Auth:ClientId': applicationId
+            'Auth:Audience': AuthAudience
         }
     }
     resource sites_CrewTaskMgrAuthenticatedSvcs_name_Hello 'functions@2022-09-01' = {
@@ -321,12 +359,12 @@ resource funcCrewTaskMgrAuthSvcs 'Microsoft.Web/sites@2022-09-01' = {
         }
     }
 
-    resource siteName_web 'sourcecontrols@2020-12-01' = {
-        name: 'web'
-        properties: {
-            repoUrl: repoURL
-            branch: branch
-            isManualIntegration: true
-        }
-    }
+    // resource siteName_web 'sourcecontrols@2020-12-01' = {
+    //     name: 'web'
+    //     properties: {
+    //         repoUrl: repoURL
+    //         branch: branch
+    //         isManualIntegration: true
+    //     }
+    // }
 }

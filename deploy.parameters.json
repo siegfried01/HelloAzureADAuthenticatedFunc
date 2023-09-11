@@ -17,6 +17,22 @@
                 },
                 "secretName": "ApplicationId"
             }
+        },
+        "AuthTenantId": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourceGroups/aksbicep02/providers/Microsoft.KeyVault/vaults/aksbicep02SH0001"
+                },
+                "secretName": "BackEndCrewTaskMgrTenantId"
+            }
+        },
+        "AuthAudience": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourceGroups/aksbicep02/providers/Microsoft.KeyVault/vaults/aksbicep02SH0001"
+                },
+                "secretName": "BackEndCrewTaskMgrAppIdUri"
+            }
         }
     }
 }
