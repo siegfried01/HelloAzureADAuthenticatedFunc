@@ -10,26 +10,43 @@ env:
   DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: .
   RG: rg_CrewTaskMgr
-  functionApp: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+  FUNCTIONAPP:  jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+  FUNCTIONNAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+
 
 jobs:
   configure-apim:
     runs-on: windows-latest
     steps:
-    - uses: azure/login@v1
+    - name: Checkout code
+      uses: actions/checkout@v2
+    
+    - name: Set up Azure CLI
+      uses: azure/login@v1
       with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}    
-    - name: get-accessToken
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+    - name: Acquire Azure AD token (bash)
+      id: azure-token
       run: |
-          Uninstall-AzureRm
-          Install-Module -Name Az -AllowClobber -Scope CurrentUser -Force
-          Import-Module Az
-          Connect-AzAccount
-          $accountInfo = az account show
-          $accountInfoObject = $accountInfo | ConvertFrom-Json
-          $subscription  = $accountInfoObject.id
-          $token = (Get-AzAccessToken -ResourceUrl https://management.azure.com).Token
-          $functionName = "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs"
-          $uri = "https://management.azure.com/subscriptions/$subscription/resourceGroups/$ENV:RG/providers/Microsoft.Web/sites/$ENV:functionApp/functions/$functionName/listkeys?api-version=2015-08-01"
-          $functionKeys = Invoke-RestMethod -Method Post -Uri $uri -Headers @{ Authorization = "Bearer $accessToken" }
+        export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
+        export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+        echo "Bearer $(az account get-access-token --query 'accessToken' -o tsv)" >> token.txt
+        echo "::set-output name=token::$(cat token.txt)"
+    
+    - name: Use Bearer Token to Make REST Call (Bash)
+      run: |
+        accountInfo = az account show
+        accountInfoObject = $accountInfo | ConvertFrom-Json
+        subscriptionId  = $accountInfoObject.id
+        echo "subscription = $subscriptionId"
+        token=$(cat token.txt)
+        # Use the $token variable in your REST call
+        # For example, to call an Azure API, you might use curl or Invoke-RestMethod
+        functionkeylist = az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        keylistobject = $functionkeylist | ConvertFrom-Json
+        functionKey = $keylistobject.functionKeys.default
+
   
