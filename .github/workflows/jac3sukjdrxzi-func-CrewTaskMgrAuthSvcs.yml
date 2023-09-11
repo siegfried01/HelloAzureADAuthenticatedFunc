@@ -28,6 +28,7 @@ jobs:
     
     - name: Acquire Azure AD token (bash)
       id: azure-token
+      shell: bash
       run: |
         export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
         export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
@@ -37,6 +38,7 @@ jobs:
         echo "::set-output name=token::$(cat token.txt)"
     
     - name: Use Bearer Token to Make REST Call (Bash)
+      shell: bash
       run: |
         accountInfo = az account show
         accountInfoObject = $accountInfo | ConvertFrom-Json
