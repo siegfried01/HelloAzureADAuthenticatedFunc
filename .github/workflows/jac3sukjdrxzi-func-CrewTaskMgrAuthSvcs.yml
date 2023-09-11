@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
     branches:
     - master
+  push:
+    branches:
+    - master
 env:
   AZURE_FUNCTIONAPP_NAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
   AZURE_FUNCTIONAPP_PACKAGE_PATH: .\published
@@ -28,12 +31,13 @@ jobs:
     
     - name: Acquire Azure AD token (bash)
       id: azure-token
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
       shell: bash
       run: |
         export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
         export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
         export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
-        az login -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
+        az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET --tenant $AZURE_TENANT_ID
         echo "Bearer $(az account get-access-token --query 'accessToken' -o tsv)" >> token.txt
         echo "::set-output name=token::$(cat token.txt)"
     
