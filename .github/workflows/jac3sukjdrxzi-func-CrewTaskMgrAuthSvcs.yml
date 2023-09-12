@@ -42,17 +42,17 @@ jobs:
         echo "::set-output name=token::$(cat token.txt)"
     
     - name: Use Bearer Token to Make REST Call (Bash)
-      shell: bash
+      shell: pwsh
       run: |
-        accountInfo=az account show
-        accountInfoObject=$accountInfo | ConvertFrom-Json
-        subscriptionId=$accountInfoObject.id
-        echo "subscription=$subscriptionId"
-        token=$(cat token.txt)
+        $accountInfo=az account show
+        $accountInfoObject=$accountInfo | ConvertFrom-Json
+        $subscriptionId=$accountInfoObject.id
+        write-output "subscription=$subscriptionId"
+        $token=$(cat token.txt)
         # Use the $token variable in your REST call
         # For example, to call an Azure API, you might use curl or Invoke-RestMethod
-        functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
-        keylistobject=$functionkeylist | ConvertFrom-Json
-        functionKey=$keylistobject.functionKeys.default
+        $functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        $keylistobject=$functionkeylist | ConvertFrom-Json
+        $functionKey=$keylistobject.functionKeys.default
 
   
