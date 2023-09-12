@@ -49,9 +49,9 @@ jobs:
         $subscriptionId=$accountInfoObject.id
         write-output "subscription=$subscriptionId"
         $token=$(cat token.txt)
-        export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
-        export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
-        export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        $AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        $AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
+        $AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
         az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
         # Use the $token variable in your REST call
         # For example, to call an Azure API, you might use curl or Invoke-RestMethod
