@@ -55,8 +55,12 @@ jobs:
         az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
         # Use the $token variable in your REST call
         # For example, to call an Azure API, you might use curl or Invoke-RestMethod
-        $functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        #$functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        $functionkeylist = az rest --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        #$functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
         $keylistobject=$functionkeylist | ConvertFrom-Json
         $functionKey=$keylistobject.functionKeys.default
+        $key = $functionKey.Substring(0,4)
+        write-output "key = $key ..."
 
   
