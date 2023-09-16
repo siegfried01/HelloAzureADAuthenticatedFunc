@@ -52,11 +52,13 @@ jobs:
         $subscriptionId=$accountInfoObject.id
         write-output "subscription=$subscriptionId"
         $token=$(cat token.txt)
-        write-output $token.Substring(0,10)
+        write-output "token = $token.Substring(0,10)"
         $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
         $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
         $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+        write-output "login"
         az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+        write-output "make rest call"
         # Use the $token variable in your REST call
         # For example, to call an Azure API, you might use curl or Invoke-RestMethod
         #$functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
