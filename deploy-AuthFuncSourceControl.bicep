@@ -53,9 +53,21 @@
    fi
    End commands for one time initializations using Azure CLI with bash
 
+   emacs ESC 4 F10 assign RBAC role
+   Begin commands for one time initializations using Azure CLI with bash
+   functionApp="${uniqueName}-func-CrewTaskMgrAuthSvcs"
+   subscriptionId=`az account show --query 'id' --output tsv`
+   #az functionApp identity assign --name $functionAppName --resource-group $rg
+   #az ad sp show --id http://spad_$name --query objectId --output tsv
+   #az ad sp list | tr '\r' -d
+   clientId=73570410-46b1-48a8-b7c2-8f86ebba712d
+   echo az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
+   az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
+   az role assignment list --assignee $clientId
+   End commands for one time initializations using Azure CLI with bash
 
    Shutdown (delete) Function App only
-   emacs ESC 4 F10
+   emacs ESC 5 F10
    Begin commands to shut down this deployment using Azure CLI with bash
    echo CreateBuildEvent.exe
    CreateBuildEvent.exe&
