@@ -38,8 +38,10 @@ jobs:
         export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
         export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
         az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+        token=$(az account get-access-token --query 'accessToken' -o tsv)
         echo "Bearer $(az account get-access-token --query 'accessToken' -o tsv)" >> token.txt
         echo "::set-output name=token::$(cat token.txt)"
+        echo "::set-env name=token::$(cat token.txt)"
     
     - name: Use Bearer Token to Make REST Call (Powershell)
       shell: pwsh
@@ -48,7 +50,7 @@ jobs:
         $accountInfoObject=$accountInfo | ConvertFrom-Json
         $subscriptionId=$accountInfoObject.id
         write-output "subscription=$subscriptionId"
-        $token=$(cat token.txt)
+        #$token=$(cat token.txt)
         $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
         $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
         $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
@@ -56,8 +58,8 @@ jobs:
         # Use the $token variable in your REST call
         # For example, to call an Azure API, you might use curl or Invoke-RestMethod
         #$functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
-        $functionkeylist = az rest --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
-        #$functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        #$functionkeylist = az rest --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
+        $functionkeylist=az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$FUNCTIONNAME/host/default/listKeys?api-version=2018-11-01"
         $keylistobject=$functionkeylist | ConvertFrom-Json
         $functionKey=$keylistobject.functionKeys.default
         $key = $functionKey.Substring(0,4)
