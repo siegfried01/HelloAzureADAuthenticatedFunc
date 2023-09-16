@@ -42,7 +42,7 @@ jobs:
         echo "Bearer $(az account get-access-token --query 'accessToken' -o tsv)" >> token.txt
         echo "::set-output name=token::$(cat token.txt)"
         #echo "::set-env name=token::$(cat token.txt)"
-        echo $token >> $GITHUB_ENV
+        #echo $token >> $GITHUB_ENV
     
     - name: Use Bearer Token to Make REST Call (Powershell)
       shell: pwsh
@@ -51,7 +51,7 @@ jobs:
         $accountInfoObject=$accountInfo | ConvertFrom-Json
         $subscriptionId=$accountInfoObject.id
         write-output "subscription=$subscriptionId"
-        #$token=$(cat token.txt)
+        $token=$(cat token.txt)
         $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
         $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
         $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
