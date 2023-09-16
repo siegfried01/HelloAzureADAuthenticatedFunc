@@ -42,7 +42,7 @@ jobs:
         echo "Bearer $(az account get-access-token --query 'accessToken' -o tsv)" >> token.txt
         echo "::set-output name=token::$(cat token.txt)"
         #echo "::set-env name=token::$(cat token.txt)"
-        echo $token >> $GITHUB_ENV.
+        echo $token >> $GITHUB_ENV
     
     - name: Use Bearer Token to Make REST Call (Powershell)
       shell: pwsh
