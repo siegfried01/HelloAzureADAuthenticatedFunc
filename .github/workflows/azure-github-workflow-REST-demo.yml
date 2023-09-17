@@ -1,0 +1,24 @@
+name: Azure REST API Workflow
+on:
+  workflow_dispatch:
+    branches:
+    - master
+    - name: Checkout code
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+  - name: Checkout Repository
+    uses: actions/checkout@v2
+
+  - name: Set up Azure CLI
+    uses: azure/login@v1
+    with:
+      creds: ${{ secrets.AZURE_CLIENT_SECRET }}
+      enable-AzPSSession: true
+
+  - name: Make Azure REST API Call
+    run: |
+      # Replace with your Azure REST API call using cURL or other HTTP client.
+      curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" \
+        https://management.azure.com/subscriptions/{subscription_id}/resourceGroups?api-version=2021-04-01
