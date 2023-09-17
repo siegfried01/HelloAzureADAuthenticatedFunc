@@ -3,9 +3,7 @@ on:
   workflow_dispatch:
     branches:
     - master
-  push:
-    branches:
-    - master
+
 env:
   AZURE_FUNCTIONAPP_NAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
   AZURE_FUNCTIONAPP_PACKAGE_PATH: .\published
