@@ -1,0 +1,26 @@
+name: Demo Azure REST API in Github Workflow
+on:
+  workflow_dispatch:
+    branches:
+    - master
+
+jobs:
+  demo-rest-api-call:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        creds: ${{ secrets.AZURE_CLIENT_SECRET }}
+        enable-AzPSSession: true
+
+    - name: Make Azure REST API Call
+      run: |
+        export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
+        export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+        export AZURE_HTTP_API_AUTH_TOKEN=$(az account get-access-token --query 'accessToken' -o tsv)
+        SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+        curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" \
+        https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
