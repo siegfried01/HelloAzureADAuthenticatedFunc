@@ -16,6 +16,10 @@ jobs:
 
     - name: Make Azure REST API Call
       run: |
+        export AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
+        export AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
+        export AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+        az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
         SUBSCRIPTION_ID=$(az account show --query id --output tsv)
         curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" \
         https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
