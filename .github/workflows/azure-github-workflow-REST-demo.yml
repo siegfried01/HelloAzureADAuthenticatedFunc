@@ -16,5 +16,6 @@ jobs:
 
     - name: Make Azure REST API Call
       run: |
+        SUBSCRIPTION_ID = az account show --query id --output tsv
         curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" \
-        https://management.azure.com/subscriptions/{subscription_id}/resourceGroups?api-version=2021-04-01
+        https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
