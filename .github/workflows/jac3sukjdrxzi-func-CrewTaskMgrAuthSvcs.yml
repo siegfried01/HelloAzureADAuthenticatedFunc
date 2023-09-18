@@ -51,6 +51,7 @@ jobs:
         $subscriptionId=$accountInfoObject.id
         write-output "subscription=$subscriptionId"
         $token=$(cat token.txt)
+        $token=Get-AzAccessToken
         write-output "token = $token.Substring(0,10)"
         $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
         $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
