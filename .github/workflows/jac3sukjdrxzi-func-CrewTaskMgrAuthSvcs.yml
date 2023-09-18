@@ -44,8 +44,8 @@ jobs:
         #echo $token >> $GITHUB_ENV
     
     - name: Use Bearer Token to Make REST Call (Powershell)
-      shell: pwsh
-      run: |
+      uses: azure/powershell@v1
+      inlineScript: |
         $accountInfo=az account show
         $accountInfoObject=$accountInfo | ConvertFrom-Json
         $subscriptionId=$accountInfoObject.id
