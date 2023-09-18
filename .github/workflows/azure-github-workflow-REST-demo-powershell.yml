@@ -18,11 +18,11 @@ jobs:
       uses: azure/powershell@v1
       with:
         inlineScript: |
-          $AZURE_CLIENT_ID=${{ secrets.AZURE_CLIENT_ID }}
-          $AZURE_CLIENT_SECRET=${{ secrets.AZURE_CLIENT_SECRET }}
-          $AZURE_TENANT_ID=${{ secrets.AZURE_TENANT_ID }}
+          $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+          $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+          $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
           az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
           $AZURE_HTTP_API_AUTH_TOKEN=(az account get-access-token --query 'accessToken' -o tsv)
-          $SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+          $SUBSCRIPTION_ID=(az account show --query id --output tsv)
           curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
         azPSVersion: "latest"
