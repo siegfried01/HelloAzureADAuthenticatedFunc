@@ -41,4 +41,5 @@ jobs:
           $functionKey=$keyListObject.functionKeys.default
           $key = $functionKey
           write-output "key = $key ..."
+          az rest -m get --header "Accept=application/json" --header "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" -u "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG/providers/Microsoft.Web/sites/$AZURE_FUNCTIONAPP_NAME/functions?api-version=2015-08-01"
         azPSVersion: "latest"
