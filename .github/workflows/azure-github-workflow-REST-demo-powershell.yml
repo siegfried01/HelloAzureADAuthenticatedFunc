@@ -38,5 +38,9 @@ jobs:
           $AZURE_HTTP_API_AUTH_TOKEN=(az account get-access-token --query 'accessToken' -o tsv)
           $SUBSCRIPTION_ID=(az account show --query id --output tsv)
           curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
-          curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$RG/providers/Microsoft.Web/sites/$AZURE_FUNCTIONAPP_NAME/host/default/listKeys?api-version=2018-11-01 )
+          $functionKeyList=( curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG/providers/Microsoft.Web/sites/$AZURE_FUNCTIONAPP_NAME/host/default/listKeys?api-version=2018-11-01 )
+          $keyListObject=$functionKeyList | ConvertFrom-Json
+          $functionKey=$keyListObject.functionKeys.default
+          $key = $functionKey.Substring(0,4)
+          write-output "key = $key ..."
         azPSVersion: "latest"
