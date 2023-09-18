@@ -14,8 +14,6 @@ env:
   DOTNET_CORE_VERSION: 6.0.x
   WORKING_DIRECTORY: .
   RG: rg_CrewTaskMgr
-  FUNCTIONAPP:  jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
-  FUNCTIONNAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
 
 jobs:
   demo-rest-api-call:
