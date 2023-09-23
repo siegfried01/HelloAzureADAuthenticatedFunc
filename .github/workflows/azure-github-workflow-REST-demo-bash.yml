@@ -1,4 +1,4 @@
-name: Get My own Token & Demo Azure REST API in Github Workflow
+name: bash Get My own Token & Demo Azure REST API in Github Workflow
 on:
   workflow_dispatch:
     branches:
