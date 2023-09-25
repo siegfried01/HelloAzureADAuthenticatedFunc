@@ -32,6 +32,10 @@ jobs:
       id: azure-token
       shell: bash
       run: |
+        AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+        AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+        AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+        az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
         token=$(az account get-access-token --query 'accessToken' -o tsv)
         echo "::set-output name=token::$token"
 
