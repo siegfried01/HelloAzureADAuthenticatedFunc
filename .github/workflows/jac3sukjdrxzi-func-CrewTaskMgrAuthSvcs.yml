@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     branches:
     - master
+    - NoAzureADNoCosmos
 
 env:
   AZURE_FUNCTIONAPP_NAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
