@@ -54,4 +54,6 @@ jobs:
           $keylistobject = $functionkeylist | ConvertFrom-Json
           $functionKey = $keylistobject.functionKeys.default
           Write-Output "Function Key: $functionKey"
+          $signatures = az rest --headers "Authorization=Bearer $token" --method post --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$FUNCTIONAPP/functions?api-version=2015-08-01"
+          Write-Output "signatures=$signatures"
         azPSVersion: "latest"
