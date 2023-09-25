@@ -1,4 +1,4 @@
-name: Konstantinos Passadis Fetch Function Keys and signatures
+name: Konstantinos Passadis Fetch Function Keys and signatures from Function App
 
 on:
   workflow_dispatch:
