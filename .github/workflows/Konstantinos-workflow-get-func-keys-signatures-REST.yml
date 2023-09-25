@@ -11,6 +11,7 @@ on:
 
 env:
   AZURE_FUNCTIONAPP_NAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+  FUNCTIONAPP: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
   AZURE_FUNCTIONAPP_PACKAGE_PATH: .\published
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 6.0.x
@@ -19,7 +20,7 @@ env:
 
 jobs:
   demo-rest-api-call:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -27,21 +28,22 @@ jobs:
         creds: ${{ secrets.AZURE_CLIENT_SECRET }}
         enable-AzPSSession: true
 
+    - name: Acquire Azure AD token (bash)
+      id: azure-token
+      shell: bash
+      run: |
+        token=$(az account get-access-token --query 'accessToken' -o tsv)
+        echo "::set-output name=token::$token"
+
     - name: Make Azure REST API Call
       uses: azure/powershell@v1
       with:
         inlineScript: |
-          $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
-          $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
-          $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
-          az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
-          $AZURE_HTTP_API_AUTH_TOKEN=(az account get-access-token --query 'accessToken' -o tsv)
-          $SUBSCRIPTION_ID=(az account show --query id --output tsv)
-          curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups?api-version=2021-04-01
-          $functionKeyList=( curl -X GET -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN" https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG/providers/Microsoft.Web/sites/$AZURE_FUNCTIONAPP_NAME/host/default/listKeys?api-version=2018-11-01 )
-          $keyListObject=$functionKeyList | ConvertFrom-Json
-          $functionKey=$keyListObject.functionKeys.default
-          $key = $functionKey
-          write-output "key = $key ..."
-          curl -X GET -H "Accept=application/json" -H "Authorization: Bearer $AZURE_HTTP_API_AUTH_TOKEN"  "https://management.azure.com/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG/providers/Microsoft.Web/sites/$AZURE_FUNCTIONAPP_NAME/functions?api-version=2015-08-01"
+          $subscriptionId = (az account show --query 'id' -o tsv)
+          $token = "${{ steps.azure-token.outputs.token }}"
+          $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/host/default/listKeys?api-version=2018-11-01"
+          $functionkeylist = az rest --headers "Authorization=Bearer $token" --method post --uri $uri
+          $keylistobject = $functionkeylist | ConvertFrom-Json
+          $functionKey = $keylistobject.functionKeys.default
+          Write-Output "Function Key: $functionKey"
         azPSVersion: "latest"
