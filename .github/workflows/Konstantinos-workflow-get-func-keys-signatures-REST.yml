@@ -1,0 +1,62 @@
+name: Konstantinos Passadis Fetch Function Keys and signatures from Function App
+
+on:
+  workflow_dispatch:
+    branches:
+    - master
+
+  push:
+    branches:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+  FUNCTIONAPP: jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: .\published
+  CONFIGURATION: Release
+  DOTNET_CORE_VERSION: 6.0.x
+  WORKING_DIRECTORY: .
+  RG: rg_CrewTaskMgr
+
+jobs:
+  demo-rest-api-call:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        creds: ${{ secrets.AZURE_CLIENT_SECRET }}
+        enable-AzPSSession: true
+
+    - name: Acquire Azure AD token (bash)
+      id: azure-token
+      shell: bash
+      run: |
+        AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+        AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+        AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+        az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+        token=$(az account get-access-token --query 'accessToken' -o tsv)
+        echo "::set-output name=token::$token"
+
+    - name: Make Azure REST API Call
+      uses: azure/powershell@v1
+      with:
+        inlineScript: |
+          $AZURE_CLIENT_ID="${{ secrets.AZURE_CLIENT_ID }}"
+          $AZURE_CLIENT_SECRET="${{ secrets.AZURE_CLIENT_SECRET }}"
+          $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
+          az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          $subscriptionId = (az account show --query 'id' -o tsv)
+          $token = "${{ steps.azure-token.outputs.token }}"
+          $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/host/default/listKeys?api-version=2018-11-01"
+          $functionkeylist = az rest --headers "Authorization=Bearer $token" --method post --uri $uri
+          $keylistobject = $functionkeylist | ConvertFrom-Json
+          $functionKey = $keylistobject.functionKeys.default
+          Write-Output "First 5 characters of function key: "
+          Write-Output $functionKey.Substring(0,5)
+          $ops = az rest --headers "Authorization=Bearer $token" --method get --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/functions?api-version=2015-08-01" | jq  .value[].properties.name | tr -d '\r' | tr  '\n' ' ' | tr -d '"' | sed -e 's/\s*/ /'
+          foreach ($op in $ops) {
+            $op = $op -replace '\s',''
+            Write-Host "begin create op=$op"
+          }
+        azPSVersion: "latest"
