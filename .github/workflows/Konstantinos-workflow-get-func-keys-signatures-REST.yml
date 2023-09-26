@@ -48,6 +48,7 @@ jobs:
           az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
           $subscriptionId = (az account show --query 'id' -o tsv)
           $token = "${{ steps.azure-token.outputs.token }}"
+          $token=$(az account get-access-token --query 'accessToken' -o tsv)
           $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/host/default/listKeys?api-version=2018-11-01"
           $functionkeylist = az rest --headers "Authorization=Bearer $token" --method post --uri $uri
           $keylistobject = $functionkeylist | ConvertFrom-Json
