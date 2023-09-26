@@ -13,9 +13,9 @@
    WaitForBuildComplete
    echo "Previous build is complete. Begin deployment build."
    echo az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep --parameters  '@deploy.parameters.json' 
-   az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep  --parameters  '@deploy.parameters.json' | tr '\r' -d
+   az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep  --parameters  '@deploy.parameters.json' 
    echo end deploy
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
    End commands to deploy this file using Azure CLI with bash
 
    emacs ESC 2 F10
@@ -27,7 +27,7 @@
    #echo az group delete -g $rg  --yes 
    #az group delete -g $rg  --yes 
    BuildIsComplete.exe
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
    echo "showdown is complete"
    End commands to shut down this deployment using Azure CLI with bash
 
@@ -53,21 +53,9 @@
    fi
    End commands for one time initializations using Azure CLI with bash
 
-   emacs ESC 4 F10 assign RBAC role
-   Begin commands for one time initializations using Azure CLI with bash
-   functionApp="${uniqueName}-func-CrewTaskMgrAuthSvcs"
-   subscriptionId=`az account show --query 'id' --output tsv`
-   #az functionApp identity assign --name $functionAppName --resource-group $rg
-   #az ad sp show --id http://spad_$name --query objectId --output tsv
-   #az ad sp list | tr '\r' -d
-   clientId=73570410-46b1-48a8-b7c2-8f86ebba712d
-   echo az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
-   az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
-   az role assignment list --assignee $clientId
-   End commands for one time initializations using Azure CLI with bash
 
    Shutdown (delete) Function App only
-   emacs ESC 5 F10
+   emacs ESC 4 F10
    Begin commands to shut down this deployment using Azure CLI with bash
    echo CreateBuildEvent.exe
    CreateBuildEvent.exe&
@@ -75,28 +63,7 @@
    echo az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
    az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
    BuildIsComplete.exe
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
-   echo "showdown is complete"
-   End commands to shut down this deployment using Azure CLI with bash
-
-   Shutdown (delete) Function app support
-   emacs ESC 6 F10
-   Begin commands to shut down this deployment using Azure CLI with bash
-   echo CreateBuildEvent.exe
-   CreateBuildEvent.exe&
-   echo "begin shutdown"
-   echo az functionapp plan delete --name ${unique-Name}-func-plan-CrewTaskMgrAuthSvcs --resource-group $rg --yes
-   az functionapp plan delete --name ${unique-Name}-func-plan-CrewTaskMgrAuthSvcs --resource-group $rg --yes
-   echo az storage account delete -n ${uniqueName}stgctmfunc -g $rg --yes
-   az storage account delete -n ${uniqueName}stgctmfunc -g $rg --yes
-   echo az apim delete -n ${unique-Name}-apim -g $rg --yes
-   az apim delete -n ${uniqueName}-apim -g $rg --yes
-   subscriptionId=$(az account show --query id --output tsv)
-   subscriptionId=$(perl -e '$_=shift; $cr=chr(13); s/$cr//; print' $subscriptionId)
-   echo az rest --method delete --header "Accept=application/json" -u "https://management.azure.com/subscriptions/${subscriptionId}/providers/Microsoft.ApiManagement/locations/$loc/deletedservices/${uniqueName}-apim?api-version=2020-06-01-preview"
-   az rest --method delete --header "Accept=application/json" -u "https://management.azure.com/subscriptions/${subscriptionId}/providers/Microsoft.ApiManagement/locations/$loc/deletedservices/${uniqueName}-apim?api-version=2020-06-01-preview"
-   BuildIsComplete.exe
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table  | tr '\r' -d
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
    echo "showdown is complete"
    End commands to shut down this deployment using Azure CLI with bash
 
@@ -106,13 +73,57 @@
 param location string = resourceGroup().location
 param name string = uniqueString(resourceGroup().id)
 
-@description('The URL for the GitHub repository that contains the project to deploy.')
-param repoURL string = 'https://github.com/siegfried01/HelloAzureADAuthenticatedFunc.git'
+@description('Rquire Azure AD authentication for Azure Func CrewTaskMgrAuthSvs')
+param requireAuthentication bool = true
 
+@description('Azure AD B2C App Registration client secret')
+@secure()
+param BackEndClientSecret string
+
+param applicationId string
 param funcCrewTaskMgrAuthSvcsName string = 'CrewTaskMgrAuthSvcs'
 
+@secure()
+param AuthTenantId string
+@secure()
+param AuthAudience string
+
+@description('The URL for the GitHub repository that contains the project to deploy.')
+param repoURL string = 'https://github.com/siegfried01/HelloAzureADAuthenticatedFunc.git'
+//                     'https://github.com/siegfried01/HelloAzureADAuthenticatedFunc'
+
 @description('The branch of the GitHub repository to use.')
-param branch string = 'NoAzureADNoCosmos'
+param branch string = 'master'
+
+@description('cosmos database name')
+param dbName string = 'CrewTaskMgr'
+@description('cosmos container')
+param containerName string = 'CrewTaskMgrContainer'
+
+@description('Cosmos DB account name (must contain only lowercase letters, digits, and hyphens)')
+@minLength(3)
+@maxLength(44)
+param cosmosAccountName string = 'gpdocumentdb'
+
+resource cosmosDbAccount 'Microsoft.DocumentDB/databaseAccounts@2015-04-08' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: cosmosAccountName
+    //id: '/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourceGroups/rg_GeneralPurposeCosmos/providers/Microsoft.DocumentDB/databaseAccounts/gpdocumentdb'
+}
+
+resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2022-08-15' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: '${cosmosDbAccount.name}/${dbName}'
+}
+// Data Container
+resource containerData 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2022-08-15' existing = {
+    scope: resourceGroup('rg_GeneralPurposeCosmos')
+    name: '${cosmosDbDatabase.name}/${containerName}'
+}
+output appConfigCosmosAccountKeyString string = listKeys(cosmosDbAccount.id, cosmosDbAccount.apiVersion).primaryMasterKey
+output appConfigCosmosConnectionString string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].connectionString
+output appConfigCosmosConnectionDesc string = cosmosDbAccount.listConnectionStrings().connectionStrings[0].description
+output appConfigCosmosEndPointString string = cosmosDbAccount.properties.documentEndpoint
 
 resource funcCrewTaskMgrAuthSvsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
     name: '${name}-func-plan-CrewTaskMgrAuthSvcs'
@@ -141,14 +152,71 @@ resource funcCrewTaskMgrAuthSvsPlan 'Microsoft.Web/serverfarms@2022-09-01' = {
 
 // https://learn.microsoft.com/en-us/azure/azure-functions/functions-infrastructure-as-code?tabs=bicep
 
+param storageAccountName string = '${name}stgctmfunc'
+resource stgCrewTaskMgrAuthFunc 'Microsoft.Storage/storageAccounts@2022-05-01' = {
+    name: storageAccountName
+    location: location
+    sku: {
+        name: 'Standard_LRS'
+    }
+    kind: 'StorageV2'
+
+    properties: {
+        supportsHttpsTrafficOnly: true
+        defaultToOAuthAuthentication: true
+    }
+}
+
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2021-09-01' existing = {
+    name: 'default'
+    parent: stgCrewTaskMgrAuthFunc
+}
+
+param myLogAnalyticsId string =  '/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourcegroups/defaultresourcegroup-wus2/providers/microsoft.operationalinsights/workspaces/defaultworkspace-acc26051-92a5-4ed1-a226-64a187bc27db-wus2'
+//resource myLogAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' existing = {
+//    name: '${name}-LogAnalytics'
+    
+    //Id: '/subscriptions/acc26051-92a5-4ed1-a226-64a187bc27db/resourcegroups/defaultresourcegroup-wus2/providers/microsoft.operationalinsights/workspaces/defaultworkspace-acc26051-92a5-4ed1-a226-64a187bc27db-wus2'
+//}
+resource storageDataPlaneLogs 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+    name: '${storageAccountName}-logs'
+    scope: blobService
+    properties: {
+        workspaceId: myLogAnalyticsId //myLogAnalytics.id
+        logs: [
+            {
+                category: 'StorageWrite'
+                enabled: true
+            }
+        ]
+        metrics: [
+            {
+                category: 'Transaction'
+                enabled: true
+            }
+        ]
+    }
+}
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+    name: '${name}-appins'
+    location: location
+    kind: 'web'
+    properties: {
+        Application_Type: 'web'
+        Request_Source: 'IbizaWebAppExtensionCreate'
+    }
+}
+
+var blobStorageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${stgCrewTaskMgrAuthFunc.listKeys().keys[0].value}'
+
 resource funcCrewTaskMgrAuthSvcs 'Microsoft.Web/sites@2022-09-01' = {
     name: '${name}-func-CrewTaskMgrAuthSvcs'
     location: location
     kind: 'functionapp'
     identity: {
         type: 'SystemAssigned'
-    }
-    properties: {
+    }    
+    properties: {        
         clientAffinityEnabled: false
         httpsOnly: true
         enabled: true
@@ -191,13 +259,112 @@ resource funcCrewTaskMgrAuthSvcs 'Microsoft.Web/sites@2022-09-01' = {
         storageAccountRequired: false
         keyVaultReferenceIdentity: 'SystemAssigned'
     }
-
-    resource siteName_web 'sourcecontrols@2020-12-01' = {
-        name: 'web'
+    resource authsettigns 'config@2022-09-01' = {
+        name: 'authsettingsV2'
         properties: {
-            repoUrl: repoURL
-            branch: branch
-            isManualIntegration: true
+            platform: {
+                enabled: requireAuthentication
+                runtimeVersion: '~1'
+            }
+            globalValidation: {
+                requireAuthentication: requireAuthentication
+                unauthenticatedClientAction: 'RedirectToLoginPage'
+                redirectToProvider: 'azureactivedirectory'
+            }
+            identityProviders: {
+                azureActiveDirectory: requireAuthentication ? {
+                    enabled: requireAuthentication
+                    registration: {
+                        openIdIssuer: 'https://enterprisedemoorg.b2clogin.com/enterprisedemoorg.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=B2C_1_Frontend_APIM_Totorial_SUSI' // 'https://sts.windows.net/${subscription().tenantId}/v2.0'
+                        clientId: applicationId
+                        clientSecretSettingName: 'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET'
+                    }
+                    login: {
+                        disableWWWAuthenticate: false
+                    }
+                    validation: {
+                        jwtClaimChecks: {}
+                        allowedAudiences: [
+                            'api://${applicationId}'
+                        ]
+                        defaultAuthorizationPolicy: {
+                            allowedPrincipals: {}
+                        }
+                    }
+                } : null
+            }
+            login: {
+                routes: {}
+                tokenStore: {
+                    enabled: true
+                    tokenRefreshExtensionHours: json('72.0')
+                    fileSystem: {}
+                    azureBlobStorage: {}
+                }
+                preserveUrlFragmentsForLogins: false
+                cookieExpiration: {
+                    convention: 'FixedTime'
+                    timeToExpiration: '08:00:00'
+                }
+                nonce: {
+                    validateNonce: true
+                    nonceExpirationInterval: '00:05:00'
+                }
+            }
+            httpSettings: {
+                requireHttps: true
+                routes: {
+                    apiPrefix: '/.auth'
+                }
+                forwardProxy: {
+                    convention: 'NoProxy'
+                }
+            }
         }
     }
+    resource appSettings 'config@2021-02-01' = {
+        name: 'appsettings'
+        properties: {
+            // 'APPINSIGHTS_INSTRUMENTATIONKEY': instrumentationKey
+            // 'ApplicationInsights:InstrumentationKey': instrumentationKey
+            //'APPLICATIONINSIGHTS_CONNECTION_STRING': ApplicationInsights_ConnectionString
+            'APPINSIGHTS_INSTRUMENTATIONKEY': applicationInsights.properties.InstrumentationKey
+            'FUNCTIONS_WORKER_RUNTIME': 'dotnet'
+            'Logging:ApplicationInsights:Enabled': 'true'
+            'Logging:ApplicationInsights:LogLevel': 'Trace'
+            'Logging:LogLevel:Default': 'Trace'
+            'Logging.LogLevel:Microsoft': 'Trace'
+            'ASPNETCORE_ENVIRONMENT': 'Development'
+            'MICROSOFT_PROVIDER_AUTHENTICATION_SECRET': '${BackEndClientSecret}'
+            'AzureWebJobsStorage': blobStorageConnectionString
+            COSMOS_GP_ACCOUNTKEY: listKeys(cosmosDbAccount.id, cosmosDbAccount.apiVersion).primaryMasterKey
+            COSMOS_GP_ENDPOINT: cosmosDbAccount.properties.documentEndpoint
+            'Auth:TenantId': AuthTenantId
+            'Auth:ClientId': applicationId
+            'Auth:Audience': AuthAudience
+        }
+    }
+    resource sites_CrewTaskMgrAuthenticatedSvcs_name_Hello 'functions@2022-09-01' = {
+        name: 'Hello'
+        properties: {
+            script_root_path_href: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/admin/vfs/site/wwwroot/Hello/'
+            script_href: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/admin/vfs/site/wwwroot/bin/CrewTaskMgrAuthenticatedServices.dll'
+            config_href: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/admin/vfs/site/wwwroot/Hello/function.json'
+            test_data_href: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/admin/vfs/data/Functions/sampledata/Hello.dat'
+            href: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/admin/functions/Hello'
+            config: {}
+            invoke_url_template: 'https://${funcCrewTaskMgrAuthSvcsName}.azurewebsites.net/api/hello'
+            language: 'DotNetAssembly'
+            isDisabled: false
+        }
+    }
+
+    // resource siteName_web 'sourcecontrols@2020-12-01' = {
+    //     name: 'web'
+    //     properties: {
+    //         repoUrl: repoURL
+    //         branch: branch
+    //         isManualIntegration: true
+    //     }
+    // }
 }
