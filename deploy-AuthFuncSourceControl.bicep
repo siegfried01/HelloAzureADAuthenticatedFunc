@@ -13,9 +13,9 @@
    WaitForBuildComplete
    echo "Previous build is complete. Begin deployment build."
    echo az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep --parameters  '@deploy.parameters.json' 
-   az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep  --parameters  '@deploy.parameters.json' 
+   az deployment group create --name $name --resource-group $rg   --mode  Incremental  --template-file  deploy-AuthFuncSourceControl.bicep  --parameters  '@deploy.parameters.json' | tr '\r' -d
    echo end deploy
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
    End commands to deploy this file using Azure CLI with bash
 
    emacs ESC 2 F10
@@ -27,7 +27,7 @@
    #echo az group delete -g $rg  --yes 
    #az group delete -g $rg  --yes 
    BuildIsComplete.exe
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
    echo "showdown is complete"
    End commands to shut down this deployment using Azure CLI with bash
 
@@ -53,6 +53,18 @@
    fi
    End commands for one time initializations using Azure CLI with bash
 
+   emacs ESC 4 F10 assign RBAC role
+   Begin commands for one time initializations using Azure CLI with bash
+   functionApp="${uniqueName}-func-CrewTaskMgrAuthSvcs"
+   subscriptionId=`az account show --query 'id' --output tsv`
+   #az functionApp identity assign --name $functionAppName --resource-group $rg
+   #az ad sp show --id http://spad_$name --query objectId --output tsv
+   #az ad sp list | tr '\r' -d
+   clientId=73570410-46b1-48a8-b7c2-8f86ebba712d
+   echo az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
+   az role assignment create --assignee $clientId --role Contributor --scope "/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$functionApp"
+   az role assignment list --assignee $clientId
+   End commands for one time initializations using Azure CLI with bash
 
    Shutdown (delete) Function App only
    emacs ESC 4 F10
@@ -63,7 +75,28 @@
    echo az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
    az functionapp delete -g $rg -n  "${uniqueName}-func-CrewTaskMgrAuthSvcs"
    BuildIsComplete.exe
-   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table | tr '\r' -d
+   echo "showdown is complete"
+   End commands to shut down this deployment using Azure CLI with bash
+
+   Shutdown (delete) Function app support
+   emacs ESC 6 F10
+   Begin commands to shut down this deployment using Azure CLI with bash
+   echo CreateBuildEvent.exe
+   CreateBuildEvent.exe&
+   echo "begin shutdown"
+   echo az functionapp plan delete --name ${unique-Name}-func-plan-CrewTaskMgrAuthSvcs --resource-group $rg --yes
+   az functionapp plan delete --name ${unique-Name}-func-plan-CrewTaskMgrAuthSvcs --resource-group $rg --yes
+   echo az storage account delete -n ${uniqueName}stgctmfunc -g $rg --yes
+   az storage account delete -n ${uniqueName}stgctmfunc -g $rg --yes
+   echo az apim delete -n ${unique-Name}-apim -g $rg --yes
+   az apim delete -n ${uniqueName}-apim -g $rg --yes
+   subscriptionId=$(az account show --query id --output tsv)
+   subscriptionId=$(perl -e '$_=shift; $cr=chr(13); s/$cr//; print' $subscriptionId)
+   echo az rest --method delete --header "Accept=application/json" -u "https://management.azure.com/subscriptions/${subscriptionId}/providers/Microsoft.ApiManagement/locations/$loc/deletedservices/${uniqueName}-apim?api-version=2020-06-01-preview"
+   az rest --method delete --header "Accept=application/json" -u "https://management.azure.com/subscriptions/${subscriptionId}/providers/Microsoft.ApiManagement/locations/$loc/deletedservices/${uniqueName}-apim?api-version=2020-06-01-preview"
+   BuildIsComplete.exe
+   az resource list -g $rg --query "[?resourceGroup=='$rg'].{ name: name, flavor: kind, resourceType: type, region: location }" --output table  | tr '\r' -d
    echo "showdown is complete"
    End commands to shut down this deployment using Azure CLI with bash
 
