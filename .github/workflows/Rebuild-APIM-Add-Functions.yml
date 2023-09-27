@@ -39,11 +39,13 @@ jobs:
           $AZURE_TENANT_ID="${{ secrets.AZURE_TENANT_ID }}"
           az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
           $subscriptionId = (az account show --query 'id' -o tsv)
+          write-output "list apims"
           az apim list  --resource-group $env:RG
-          az apim delete --name "$env:UNIQUE_NAME-apim"  --resource-group $env:RG --yes
           $APIM_SERVICE_NAME= "$env:UNIQUE_NAME-apim"
-          $API_ID="$env:UNIQUE_NAME-func-CrewTaskMgrAuthSvcs"
-          az apim deletedservice purge --service-name $APIM_SERVICE_NAME --location $env:LOC
+          #az apim delete --name $APIM_SERVICE_NAME --resource-group $env:RG --yes
+          $API_ID="$env:UNIQUE_NAME-APIM-CrewTaskMgrAuthSvcs"
+          write-output "API_ID=$API_ID"
+          #az apim deletedservice purge --service-name $APIM_SERVICE_NAME --location $env:LOC
           az apim api create --service-name $APIM_SERVICE_NAME -g $env:RG --api-id $API_ID --path $API_ID --display-name "$API_ID DisplayName" --description "$API_ID Description" --subscription-required false --api-type "http" | tr -d '\r'
           $token=$(az account get-access-token --query 'accessToken' -o tsv)
           $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/host/default/listKeys?api-version=2018-11-01"
