@@ -42,10 +42,6 @@ jobs:
           write-output "list apims"
           az apim list  --resource-group $env:RG
           $APIM_SERVICE_NAME= "$env:UNIQUE_NAME-apim"
-          write-output "delete $APIM_SERVICE_NAME"
-          az apim delete --name $APIM_SERVICE_NAME --resource-group $env:RG --yes
-          write-output "purge $APIM_SERVICE_NAME"
-          az apim deletedservice purge --service-name $APIM_SERVICE_NAME --location $env:LOC
           $API_ID="$env:UNIQUE_NAME-APIM-CrewTaskMgrAuthSvcs"
           write-output "API_ID=$API_ID APIM_SERVICE_NAME=$APIM_SERVICE_NAME"
           write-output "az apim create --name $APIM_SERVICE_NAME --publisher-email `"sheintze@hotmail.com`" --publisher-name `"WaveCentric`" --resource-group $env:RG --location $env:LOC --public-network-access `"true`" --sku-name `"Consumption`""
