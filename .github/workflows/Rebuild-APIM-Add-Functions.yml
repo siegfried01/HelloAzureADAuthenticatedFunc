@@ -42,16 +42,11 @@ jobs:
           write-output "list apims"
           az apim list  --resource-group $env:RG
           $APIM_SERVICE_NAME= "$env:UNIQUE_NAME-apim"
-          $apims = az apim list  -g rg_CrewTaskMgr  | jq '.[] | .name' 
-          foreach ($apim in $apims ){
-            write-output "apim=$apim"
-            if ( $apim -eq "`"jac3sukjdrxzi-apim`"" ) {
-              write-output "found $apim"
-              write-output "delete $APIM_SERVICE_NAME"
-              az apim delete --name $APIM_SERVICE_NAME --resource-group $env:RG --yes
-              write-output "purge $APIM_SERVICE_NAME"
-              az apim deletedservice purge --service-name $APIM_SERVICE_NAME --location $env:LOC
-            }
+          $apis = az apim api list --resource-group $rg --service-name $serviceName | ConvertFrom-Json
+          Write-Output "delete APIs"
+          foreach($api in $apis){
+            Write-Output $api.name
+            az apim api delete --api-id $api.name --resource-group $rg --service-name $serviceName --yes
           }
           $API_ID="$env:UNIQUE_NAME-APIM-CrewTaskMgrAuthSvcs"
           write-output "API_ID=$API_ID APIM_SERVICE_NAME=$APIM_SERVICE_NAME"
@@ -76,4 +71,41 @@ jobs:
               az apim api operation create -g $env:RG --service-name $APIM_SERVICE_NAME --api-id $API_ID  --method "GET" --display-name "post-$op" --description "$op description" --operation-id "get-$op" --url-template "/$op" | tr -d '\r'
             }
           }
+          $ApiMgmtContext = New-AzApiManagementContext -ResourceGroupName $env:RG -ServiceName $APIM_SERVICE_NAME
+          $accountInfo = az account show
+          $accountInfoObject = $accountInfo | ConvertFrom-Json
+          $subscriptionId  = $accountInfoObject.id
+          write-output "New-AzApiManagementNamedValue -Context `$ApiMgmtContext -NamedValueId `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Name `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Value $functionKey"
+          New-AzApiManagementNamedValue -Context $ApiMgmtContext -NamedValueId "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Value $functionKey
+          $credential = New-AzApiManagementBackendCredential -AuthorizationHeaderScheme basic -Header @{"x-functions-key" = @("{{jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key}}")}
+          write-output "credential = $credential"
+          write-output "`$backend = New-AzApiManagementBackend -Context `$ApiMgmtContext -BackendId `$backEndName -Url `$backEndRunTimeURL -Protocol http -Credential `$credential -Title `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs`"  -Description `$backEndName -ResourceId `"https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource`""
+          $backend = New-AzApiManagementBackend -Context $ApiMgmtContext -BackendId $backEndName -Url $backEndRunTimeURL -Protocol http -Credential $credential -Title "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs"  -Description $backEndName  -ResourceId "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource"
+          write-output "backend = $backend"
+          $policy="<policies>
+          >>  <inbound>
+          >>    <base />
+          >>    <set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" />
+          >>  </inbound>
+          >>  <backend>
+          >>    <base />
+          >>  </backend>
+          >>  <outbound>
+          >>    <base />
+          >>  </outbound>
+          >>  <on-error>
+          >>    <base />
+          >>  </on-error>
+          >></policies>"
+          write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy `$policy"
+          Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
+          write-output "Set-AzApiManagementProduct -Context `$ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$False -State `"Published`""
+          Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "Unlimited" -Title "Unlimited" -Description "Unlimited for development" -LegalTerms "Unlimited and Free for all" -SubscriptionRequired $False -State "Published"
+          write-output "Saurabh Sharma Add the API to product to Unlimited. This works!"
+          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs DisplayName"
+          Add-AzApiManagementApiToProduct -Context $ApiMgmtContext -ProductId "Unlimited" -ApiId $API_ID
+          write-output "Saurabh Sharma Set Subscription to false. This works!"
+          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs DisplayName"
+          $Api.SubscriptionRequired=$false 
+          Set-AzApiManagementApi -InputObject $Api -Name $Api.Name -ServiceUrl $Api.ServiceUrl -Protocols $Api.Protocols
         azPSVersion: "latest"
