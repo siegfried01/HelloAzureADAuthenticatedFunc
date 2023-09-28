@@ -78,7 +78,7 @@ jobs:
           $subscriptionId  = $accountInfoObject.id
           Write-Output "log in again using az login!"
           az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
-          $SecurePassword = ConvertTo-SecureString -String $AZURE_CLIENT_SECRET" -AsPlainText -Force
+          $SecurePassword = ConvertTo-SecureString -String $AZURE_CLIENT_SECRET -AsPlainText -Force
           $TenantId = $AZURE_TENANT_ID
           $ApplicationId = $AZURE_CLIENT_ID
           $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ApplicationId, $SecurePassword
