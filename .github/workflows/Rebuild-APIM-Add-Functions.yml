@@ -48,7 +48,7 @@ jobs:
             Write-Output $api.name
             az apim api delete --api-id $api.name --resource-group $rg --service-name $serviceName --yes
           }
-          $API_ID="$env:UNIQUE_NAME-APIM-CrewTaskMgrAuthSvcs"
+          $API_ID="$env:UNIQUE_NAME-func-CrewTaskMgrAuthSvcs"
           write-output "API_ID=$API_ID APIM_SERVICE_NAME=$APIM_SERVICE_NAME"
           write-output "az apim create --name $APIM_SERVICE_NAME --publisher-email `"sheintze@hotmail.com`" --publisher-name `"WaveCentric`" --resource-group $env:RG --location $env:LOC --public-network-access `"true`" --sku-name `"Consumption`""
           az apim create --name $APIM_SERVICE_NAME --publisher-email "sheintze@hotmail.com" --publisher-name "WaveCentric" --resource-group $env:RG --location $env:LOC --public-network-access "true" --sku-name "Consumption"
@@ -88,12 +88,26 @@ jobs:
           New-AzApiManagementNamedValue -Context $ApiMgmtContext -NamedValueId "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Value $functionKey
           $credential = New-AzApiManagementBackendCredential -AuthorizationHeaderScheme basic -Header @{"x-functions-key" = @("{{jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key}}")}
           write-output "credential = $credential"
+          $backEndRunTimeURL="https://$env:UNIQUE_NAME-func-crewtaskmgrauthsvcs.azurewebsites.net/api"
+          $backEndName="$env:UNIQUE_NAME-func-crewtaskmgrauthsvcs"
           write-output "`$backend = New-AzApiManagementBackend -Context `$ApiMgmtContext -BackendId `$backEndName -Url `$backEndRunTimeURL -Protocol http -Credential `$credential -Title `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs`"  -Description `$backEndName -ResourceId `"https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource`""
           $backend = New-AzApiManagementBackend -Context $ApiMgmtContext -BackendId $backEndName -Url $backEndRunTimeURL -Protocol http -Credential $credential -Title "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs"  -Description $backEndName  -ResourceId "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource"
           write-output "backend = $backend"
-          $lt = [char]60
-          $gt = [char]62
-          $policy="${lt}policies${gt} ${lt}inbound${gt} ${lt}base /${gt} ${lt}set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" /${gt} ${lt}/inbound${gt} ${lt}backend${gt} ${lt}base /${gt} ${lt}/backend${gt} ${lt}outbound${gt} ${lt}base /${gt} ${lt}/outbound${gt} ${lt}on-error${gt} ${lt}base /${gt} ${lt}/on-error${gt} ${lt}/policies${gt}"
+          $policy="<policies>
+          >>  <inbound>
+          >>    <base />
+          >>    <set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" />
+          >>  </inbound>
+          >>  <backend>
+          >>    <base />
+          >>  </backend>
+          >>  <outbound>
+          >>    <base />
+          >>  </outbound>
+          >>  <on-error>
+          >>    <base />
+          >>  </on-error>
+          >></policies>"
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy `$policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
           write-output "Set-AzApiManagementProduct -Context `$ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$False -State `"Published`""
