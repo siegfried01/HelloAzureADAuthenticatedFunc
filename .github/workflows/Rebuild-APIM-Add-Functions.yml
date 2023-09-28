@@ -110,6 +110,8 @@ jobs:
           >></policies>"
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy $policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
+          Write-Output "az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id `"Unlimited`" --api-id $API_ID"
+          az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id "Unlimited" --api-id $API_ID
           write-output "Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$false -State `"Published`""
           Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "Unlimited" -Title "Unlimited" -Description "Unlimited for development" -LegalTerms "Unlimited and Free for all" -SubscriptionRequired $false -State "Published"
           write-output "Saurabh Sharma Add the API to product to Unlimited. This works!"
