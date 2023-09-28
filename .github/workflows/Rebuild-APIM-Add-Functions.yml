@@ -64,6 +64,7 @@ jobs:
           $ops = az rest --headers "Authorization=Bearer $token" --method get --uri "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/functions?api-version=2015-08-01" | jq  .value[].properties.name | tr -d '\r' | tr  '\n' ' ' | tr -d '"' | sed -e 's/\s*/ /'
           foreach ($op in $ops) {
             $op = $op -replace '\s',''
+            $op = $op -replace '"',''
             if($op){
               Write-Host "begin create op=post-$op for api=$API_ID"
               az apim api operation create -g $env:RG --service-name $APIM_SERVICE_NAME --api-id $API_ID  --method "POST" --display-name "post-$op" --description "$op description" --operation-id "post-$op" --url-template "/$op" | tr -d '\r'
@@ -75,6 +76,8 @@ jobs:
           $accountInfo = az account show
           $accountInfoObject = $accountInfo | ConvertFrom-Json
           $subscriptionId  = $accountInfoObject.id
+          Write-Ouptput "log in again!"
+          az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
           write-output "New-AzApiManagementNamedValue -Context `$ApiMgmtContext -NamedValueId `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Name `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Value $functionKey"
           New-AzApiManagementNamedValue -Context $ApiMgmtContext -NamedValueId "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Value $functionKey
           $credential = New-AzApiManagementBackendCredential -AuthorizationHeaderScheme basic -Header @{"x-functions-key" = @("{{jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key}}")}
