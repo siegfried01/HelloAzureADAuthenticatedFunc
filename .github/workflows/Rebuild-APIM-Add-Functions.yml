@@ -96,7 +96,7 @@ jobs:
           $policy="<policies>
           >>  <inbound>
           >>    <base />
-          >>    <set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" />
+          >>    <set-backend-service id='apim-generated-policy' backend-id='$backEndName' />
           >>  </inbound>
           >>  <backend>
           >>    <base />
