@@ -53,7 +53,7 @@ jobs:
           write-output "az apim create --name $APIM_SERVICE_NAME --publisher-email `"sheintze@hotmail.com`" --publisher-name `"WaveCentric`" --resource-group $env:RG --location $env:LOC --public-network-access `"true`" --sku-name `"Consumption`""
           az apim create --name $APIM_SERVICE_NAME --publisher-email "sheintze@hotmail.com" --publisher-name "WaveCentric" --resource-group $env:RG --location $env:LOC --public-network-access "true" --sku-name "Consumption"
           write-output "az apim api create --service-name $APIM_SERVICE_NAME -g $env:RG --api-id $API_ID --path `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs`" --display-name `"$API_ID DisplayName`" --description `"$API_ID Description`" --subscription-required false --api-type `"http`""
-          az apim api create --service-name $APIM_SERVICE_NAME -g $env:RG --api-id $API_ID --path "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs" --display-name "$API_ID DisplayName" --description "$API_ID Description" --subscription-required false --api-type "http" 
+          az apim api create --service-name $APIM_SERVICE_NAME -g $env:RG --api-id $API_ID --path "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs" --display-name "$API_ID" --description "$API_ID Description" --subscription-required false --api-type "http" 
           $token=$(az account get-access-token --query 'accessToken' -o tsv)
           $uri = "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$env:RG/providers/Microsoft.Web/sites/$env:FUNCTIONAPP/host/default/listKeys?api-version=2018-11-01"
           $functionkeylist = az rest --headers "Authorization=Bearer $token" --method post --uri $uri
@@ -99,10 +99,10 @@ jobs:
           write-output "Set-AzApiManagementProduct -Context `$ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$False -State `"Published`""
           Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "Unlimited" -Title "Unlimited" -Description "Unlimited for development" -LegalTerms "Unlimited and Free for all" -SubscriptionRequired $False -State "Published"
           write-output "Saurabh Sharma Add the API to product to Unlimited. This works!"
-          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs DisplayName"
+          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name $API_ID
           Add-AzApiManagementApiToProduct -Context $ApiMgmtContext -ProductId "Unlimited" -ApiId $API_ID
           write-output "Saurabh Sharma Set Subscription to false. This works!"
-          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs DisplayName"
+          $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name $API_ID
           $Api.SubscriptionRequired=$false 
           Set-AzApiManagementApi -InputObject $Api -Name $Api.Name -ServiceUrl $Api.ServiceUrl -Protocols $Api.Protocols
         azPSVersion: "latest"
