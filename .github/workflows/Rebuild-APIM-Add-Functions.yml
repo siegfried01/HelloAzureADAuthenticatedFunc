@@ -110,8 +110,8 @@ jobs:
           >></policies>"
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy $policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
-          write-output "Set-AzApiManagementProduct -Context `$ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$False -State `"Published`""
-          Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "Unlimited" -Title "Unlimited" -Description "Unlimited for development" -LegalTerms "Unlimited and Free for all" -SubscriptionRequired $False -State "Published"
+          write-output "Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$false -State `"Published`""
+          Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "Unlimited" -Title "Unlimited" -Description "Unlimited for development" -LegalTerms "Unlimited and Free for all" -SubscriptionRequired $false -State "Published"
           write-output "Saurabh Sharma Add the API to product to Unlimited. This works!"
           $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name $API_ID
           Add-AzApiManagementApiToProduct -Context $ApiMgmtContext -ProductId "Unlimited" -ApiId $API_ID
