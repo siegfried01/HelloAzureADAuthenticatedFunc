@@ -76,8 +76,14 @@ jobs:
           $accountInfo = az account show
           $accountInfoObject = $accountInfo | ConvertFrom-Json
           $subscriptionId  = $accountInfoObject.id
-          Write-Output "log in again!"
+          Write-Output "log in again using az login!"
           az login --service-principal -u "$AZURE_CLIENT_ID" -p "$AZURE_CLIENT_SECRET" --tenant "$AZURE_TENANT_ID"
+          $SecurePassword = ConvertTo-SecureString -String $AZURE_CLIENT_SECRET" -AsPlainText -Force
+          $TenantId = $AZURE_TENANT_ID
+          $ApplicationId = $AZURE_CLIENT_ID
+          $Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $ApplicationId, $SecurePassword
+          Write-Output "log in again using Connect-AzAccount!"
+          Connect-AzAccount -ServicePrincipal -TenantId $TenantId -Credential $Credential
           write-output "New-AzApiManagementNamedValue -Context `$ApiMgmtContext -NamedValueId `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Name `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key`"  -Value $functionKey"
           New-AzApiManagementNamedValue -Context $ApiMgmtContext -NamedValueId "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Name "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key"  -Value $functionKey
           $credential = New-AzApiManagementBackendCredential -AuthorizationHeaderScheme basic -Header @{"x-functions-key" = @("{{jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs-key}}")}
