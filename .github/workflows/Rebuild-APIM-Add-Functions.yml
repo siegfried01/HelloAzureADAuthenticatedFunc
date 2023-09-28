@@ -91,7 +91,9 @@ jobs:
           write-output "`$backend = New-AzApiManagementBackend -Context `$ApiMgmtContext -BackendId `$backEndName -Url `$backEndRunTimeURL -Protocol http -Credential `$credential -Title `"jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs`"  -Description `$backEndName -ResourceId `"https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource`""
           $backend = New-AzApiManagementBackend -Context $ApiMgmtContext -BackendId $backEndName -Url $backEndRunTimeURL -Protocol http -Credential $credential -Title "jac3sukjdrxzi-func-CrewTaskMgrAuthSvcs"  -Description $backEndName  -ResourceId "https://management.azure.com/subscriptions/$subscriptionId/resourceGroups/$rg/providers/Microsoft.Web/sites/$backendAzureResource"
           write-output "backend = $backend"
-          $policy="<policies> <inbound> <base /> <set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" /> </inbound> <backend> <base /> </backend> <outbound> <base /> </outbound> <on-error> <base /> </on-error> </policies>"
+          $lt = [char]60
+          $gt = [char]62
+          $policy="${lt}policies${gt} ${lt}inbound${gt} ${lt}base /${gt} ${lt}set-backend-service id=`"apim-generated-policy`" backend-id=`"$backEndName`" /${gt} ${lt}/inbound${gt} ${lt}backend${gt} ${lt}base /${gt} ${lt}/backend${gt} ${lt}outbound${gt} ${lt}base /${gt} ${lt}/outbound${gt} ${lt}on-error${gt} ${lt}base /${gt} ${lt}/on-error${gt} ${lt}/policies${gt}"
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy `$policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
           write-output "Set-AzApiManagementProduct -Context `$ApiMgmtContext  -ProductId `"Unlimited`" -Title `"Unlimited`" -Description `"Unlimited for development`" -LegalTerms `"Unlimited and Free for all`" -SubscriptionRequired `$False -State `"Published`""
