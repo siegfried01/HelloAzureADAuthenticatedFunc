@@ -111,8 +111,8 @@ jobs:
           >></policies>"
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy $policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
-          write-output "az apim product create --service-name $APIM_SERVICE_NAME --product-name `"$env:PRODUCT_NAME`" --description `"$env:PRODUCT_NAME Description`" -g $env:RS"
-          az apim product create --service-name $APIM_SERVICE_NAME --product-name "$env:PRODUCT_NAME" --description "$env:PRODUCT_NAME Description" -g $env:RS
+          write-output "az apim product create --service-name $APIM_SERVICE_NAME --product-name `"$env:PRODUCT_NAME`" --description `"$env:PRODUCT_NAME Description`" -g $env:RG"
+          az apim product create --service-name $APIM_SERVICE_NAME --product-name "$env:PRODUCT_NAME" --description "$env:PRODUCT_NAME Description" -g $env:RG
           Write-Output "az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id `"$env:PRODUCT_NAME`" --api-id $API_ID"
           az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id "$env:PRODUCT_NAME" --api-id $API_ID
           write-output "Error Code: ResourceNotFound Error Message: Product not found. Request Id: 48408468-effa-4cc7-a694-ba1a2f0cff8c "
