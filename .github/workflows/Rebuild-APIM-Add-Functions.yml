@@ -112,15 +112,14 @@ jobs:
           write-output "Set-AzApiManagementPolicy -Context `$ApiMgmtContext -ApiId $API_ID -Policy $policy"
           Set-AzApiManagementPolicy -Context $ApiMgmtContext -ApiId $API_ID -Policy $policy
           write-output "az apim product create --service-name $APIM_SERVICE_NAME --product-name `"$env:PRODUCT_NAME`" --description `"$env:PRODUCT_NAME Description`" -g $env:RG"
-          az apim product create --service-name $APIM_SERVICE_NAME --product-name "$env:PRODUCT_NAME" --description "$env:PRODUCT_NAME Description" -g $env:RG
-          Write-Output "az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id `"$env:PRODUCT_NAME`" --api-id $API_ID"
+          $PRODUCT_ID=$(az apim product create --resource-group rg_CrewTaskMgr --service-name jac3sukjdrxzi-apim --description "unlimited description"  --product-name "Unlimited" --state published --subscription-required false --query "name" --output tsv)
           az apim product api add --resource-group $env:RG --service-name $APIM_SERVICE_NAME  --product-id "$env:PRODUCT_NAME" --api-id $API_ID
-          write-output "Error Code: ResourceNotFound Error Message: Product not found. Request Id: 48408468-effa-4cc7-a694-ba1a2f0cff8c "
-          write-output "Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId `"$env:PRODUCT_NAME`" -Title `"$env:PRODUCT_NAME`" -Description `"$env:PRODUCT_NAME for development`" -LegalTerms `"$env:PRODUCT_NAME and Free for all`" -SubscriptionRequired `$false -State `"Published`""
-          Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId "$env:PRODUCT_NAME" -Title "$env:PRODUCT_NAME" -Description "$env:PRODUCT_NAME for development" -LegalTerms "$env:PRODUCT_NAME and Free for all" -SubscriptionRequired $false -State "Published"
+          write-output "Set-AzApiManagementProduct: Error Code: ResourceNotFound Error Message: Product not found. Request Id: 48408468-effa-4cc7-a694-ba1a2f0cff8c "
+          write-output "Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId `"$PRODUCT_ID`" -Title `"$env:PRODUCT_NAME`" -Description `"$env:PRODUCT_NAME for development`" -LegalTerms `"$env:PRODUCT_NAME and Free for all`" -SubscriptionRequired `$false -State `"Published`""
+          Set-AzApiManagementProduct -Context $ApiMgmtContext  -ProductId $PRODUCT_ID -Title "$env:PRODUCT_NAME" -Description "$env:PRODUCT_NAME for development" -LegalTerms "$env:PRODUCT_NAME and Free for all" -SubscriptionRequired $false -State "Published"
           write-output "Saurabh Sharma Add the API to product to $env:PRODUCT_NAME. This works!"
           $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name $API_ID
-          Add-AzApiManagementApiToProduct -Context $ApiMgmtContext -ProductId "$env:PRODUCT_NAME" -ApiId $API_ID
+          Add-AzApiManagementApiToProduct -Context $ApiMgmtContext -ProductId $PRODUCT_ID -ApiId $API_ID
           write-output "Saurabh Sharma Set Subscription to false. This works!"
           $Api = Get-AzApiManagementApi -Context $ApiMgmtContext -Name $API_ID
           $Api.SubscriptionRequired=$false 
