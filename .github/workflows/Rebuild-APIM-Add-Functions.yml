@@ -51,8 +51,9 @@ jobs:
           }
           $products = az apim product list --resource-group $env:RG --service-name $APIM_SERVICE_NAME | ConvertFrom-Json
           foreach($product in $products){
-            Write-Output "delete productId = $($product.id)"
-            az apim product delete --product-id $product.id --resource-group $env:RG --service-name $APIM_SERVICE_NAME --yes
+            Write-Output "product = $product"
+            Write-Output "delete productId = $($product.id) productName=$($product.name)"
+            az apim product delete --product-id $product.name --resource-group $env:RG --service-name $APIM_SERVICE_NAME --yes
           }
           $API_ID="$env:UNIQUE_NAME-func-CrewTaskMgrAuthSvcs"
           write-output "API_ID=$API_ID APIM_SERVICE_NAME=$APIM_SERVICE_NAME"
